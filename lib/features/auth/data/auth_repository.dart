@@ -16,65 +16,35 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    final cleanEmail = email.trim().toLowerCase();
+    final response = await client.post<Map<String, dynamic>>(
+      ApiEndpoints.login,
+      data: {
+        'email': email.trim().toLowerCase(),
+        'password': password,
+      },
+    );
 
-    try {
-      final response = await client.post<Map<String, dynamic>>(
-        ApiEndpoints.login,
-        data: {
-          'email': cleanEmail,
-          'password': password,
-        },
-      ).timeout(const Duration(milliseconds: 2500));
-
-      final data = response.data;
-      if (data != null && data['accessToken'] != null) {
-        final accessToken = data['accessToken'] as String;
-        final refreshToken = data['refreshToken'] as String?;
-
-        await storage.saveTokens(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        );
-
-        final user = UserModel.fromJson(data);
-        await storage.saveUser(user.toJson());
-
-        return user;
-      }
-    } catch (_) {
-      // Backend offline hoặc không kết nối DB -> Tự động fallback mock login
+    final data = response.data;
+    if (data == null) {
+      throw Exception('Không nhận được dữ liệu xác thực từ máy chủ');
     }
 
-    // Chế độ demo/offline: Nhập email đúng định dạng và mật khẩu >= 6 ký tự là đăng nhập được
-    if (cleanEmail.contains('@') && password.length >= 6) {
-      final namePart = cleanEmail.split('@').first;
-      final formattedName = namePart.replaceAll(RegExp(r'[._]'), ' ');
-      final capitalizedName = formattedName.isNotEmpty
-          ? formattedName[0].toUpperCase() + formattedName.substring(1)
-          : 'Người Bán';
+    final accessToken = data['accessToken'] as String?;
+    final refreshToken = data['refreshToken'] as String?;
 
-      final mockUser = UserModel(
-        id: 'usr_${cleanEmail.hashCode.abs()}',
-        email: cleanEmail,
-        fullName: capitalizedName,
-        phone: '0901234567',
-        accountStatus: 'ACTIVE',
-        emailVerified: true,
-        roles: ['SELLER', 'USER'],
-        permissions: ['POST_CREATE', 'POST_MANAGE', 'ORDER_MANAGE'],
-      );
-
-      await storage.saveTokens(
-        accessToken: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        refreshToken: 'mock_refresh_${DateTime.now().millisecondsSinceEpoch}',
-      );
-      await storage.saveUser(mockUser.toJson());
-
-      return mockUser;
+    if (accessToken == null) {
+      throw Exception('Thiếu access token trong phản hồi');
     }
 
-    throw Exception('Email không đúng định dạng hoặc mật khẩu chưa đủ 6 ký tự');
+    await storage.saveTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
+
+    final user = UserModel.fromJson(data);
+    await storage.saveUser(user.toJson());
+
+    return user;
   }
 
   Future<UserModel> register({
@@ -83,60 +53,35 @@ class AuthRepository {
     required String fullName,
     String? phone,
   }) async {
-    final cleanEmail = email.trim().toLowerCase();
+    final response = await client.post<Map<String, dynamic>>(
+      ApiEndpoints.register,
+      data: {
+        'email': email.trim().toLowerCase(),
+        'password': password,
+        'fullName': fullName.trim(),
+        if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
+      },
+    );
 
-    try {
-      final response = await client.post<Map<String, dynamic>>(
-        ApiEndpoints.register,
-        data: {
-          'email': cleanEmail,
-          'password': password,
-          'fullName': fullName.trim(),
-          if (phone != null && phone.isNotEmpty) 'phone': phone.trim(),
-        },
-      ).timeout(const Duration(milliseconds: 2500));
-
-      final data = response.data;
-      if (data != null && data['accessToken'] != null) {
-        final accessToken = data['accessToken'] as String;
-        final refreshToken = data['refreshToken'] as String?;
-
-        await storage.saveTokens(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        );
-
-        final user = UserModel.fromJson(data);
-        await storage.saveUser(user.toJson());
-
-        return user;
-      }
-    } catch (_) {
-      // Backend offline -> Fallback mock register
+    final data = response.data;
+    if (data == null) {
+      throw Exception('Đăng ký không thành công');
     }
 
-    if (cleanEmail.contains('@') && password.length >= 6) {
-      final mockUser = UserModel(
-        id: 'usr_${cleanEmail.hashCode.abs()}',
-        email: cleanEmail,
-        fullName: fullName.trim().isNotEmpty ? fullName.trim() : cleanEmail.split('@').first,
-        phone: phone?.trim() ?? '0901234567',
-        accountStatus: 'ACTIVE',
-        emailVerified: true,
-        roles: ['SELLER', 'USER'],
-        permissions: ['POST_CREATE', 'POST_MANAGE', 'ORDER_MANAGE'],
-      );
+    final accessToken = data['accessToken'] as String?;
+    final refreshToken = data['refreshToken'] as String?;
 
+    if (accessToken != null) {
       await storage.saveTokens(
-        accessToken: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        refreshToken: 'mock_refresh_${DateTime.now().millisecondsSinceEpoch}',
+        accessToken: accessToken,
+        refreshToken: refreshToken,
       );
-      await storage.saveUser(mockUser.toJson());
-
-      return mockUser;
     }
 
-    throw Exception('Email không đúng định dạng hoặc mật khẩu chưa đủ 6 ký tự');
+    final user = UserModel.fromJson(data);
+    await storage.saveUser(user.toJson());
+
+    return user;
   }
 
   Future<void> sendEmailVerification(String email) async {

@@ -43,9 +43,22 @@ class AppException implements Exception {
         message = response.data;
       }
 
-      if (statusCode == 401) {
+      // Map domain error code
+      if (errorCode != null && _errorCodeMessages.containsKey(errorCode)) {
         return AppException(
-          message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+          message: _errorCodeMessages[errorCode]!,
+          statusCode: statusCode,
+          errorCode: errorCode,
+        );
+      }
+
+      if (statusCode == 401) {
+        final path = error.requestOptions.path;
+        final isLogin = path.contains('/api/auth/login');
+        return AppException(
+          message: isLogin
+              ? (message ?? 'Email hoặc mật khẩu không chính xác.')
+              : 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
           statusCode: 401,
         );
       }
@@ -54,15 +67,6 @@ class AppException implements Exception {
         return AppException(
           message: 'Bạn không có quyền thực hiện thao tác này.',
           statusCode: 403,
-        );
-      }
-
-      // Map domain error code
-      if (errorCode != null && _errorCodeMessages.containsKey(errorCode)) {
-        return AppException(
-          message: _errorCodeMessages[errorCode]!,
-          statusCode: statusCode,
-          errorCode: errorCode,
         );
       }
 

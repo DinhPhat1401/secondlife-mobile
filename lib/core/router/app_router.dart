@@ -21,32 +21,59 @@ import '../../features/wallet/presentation/screens/seller_wallet_screen.dart';
 import '../../features/notifications/presentation/screens/notification_center_screen.dart';
 import '../../features/profile/presentation/screens/seller_profile_screen.dart';
 
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<AuthState>(
+      authNotifierProvider,
+      (_, __) => notifyListeners(),
+    );
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final authState = _ref.read(authNotifierProvider);
+    final isAuth = authState.isAuthenticated;
+    final isAuthRoute = state.matchedLocation == '/login' ||
+        state.matchedLocation == '/register' ||
+        state.matchedLocation == '/forgot-password';
+
+    // 1. While initial session is being checked from secure storage
+    if (authState.status == AuthStatus.initial) {
+      return null;
+    }
+
+    // 2. While login/register is in progress, stay on the auth screen
+    if (authState.status == AuthStatus.loading && isAuthRoute) {
+      return null;
+    }
+
+    // 3. Unauthenticated user trying to access protected screen -> redirect to /login
+    if (!isAuth && !isAuthRoute && state.matchedLocation != '/verify-email') {
+      return '/login';
+    }
+
+    // 4. Authenticated user trying to access /login or /register -> redirect to /dashboard
+    if (isAuth && isAuthRoute) {
+      return '/dashboard';
+    }
+
+    return null;
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
-    initialLocation: '/dashboard',
-    redirect: (context, state) {
-      final isAuth = authState.isAuthenticated;
-      final isAuthRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register' ||
-          state.matchedLocation == '/forgot-password';
+    initialLocation: '/login',
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
 
-      // Still checking session from disk
-      if (authState.status == AuthStatus.initial || authState.status == AuthStatus.loading) {
-        return null;
-      }
-
-      if (!isAuth && !isAuthRoute && state.matchedLocation != '/verify-email') {
-        return '/login';
-      }
-
-      if (isAuth && isAuthRoute) {
-        return '/dashboard';
-      }
-
-      return null;
-    },
     routes: [
       GoRoute(
         path: '/login',
