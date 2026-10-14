@@ -6,6 +6,8 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/verify_email_screen.dart';
 import '../../features/dashboard/presentation/main_shell_screen.dart';
+import '../../features/onboarding/presentation/screens/address_map_picker_screen.dart';
+import '../../features/onboarding/presentation/screens/seller_onboarding_wizard_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -62,10 +64,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/seller-onboarding',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Định Danh Người Bán (eKYC)')),
-          body: const Center(child: Text('Onboarding & Chụp CCCD / Selfie')),
-        ),
+        builder: (context, state) => const SellerOnboardingWizardScreen(),
+      ),
+      GoRoute(
+        path: '/seller-address',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return AddressMapPickerScreen(
+            initialLat: extra?['initialLat'] as double?,
+            initialLng: extra?['initialLng'] as double?,
+            initialAddress: extra?['initialAddress'] as String?,
+          );
+        },
       ),
       GoRoute(
         path: '/credits/buy',
