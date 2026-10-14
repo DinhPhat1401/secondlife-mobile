@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../credits/presentation/credit_providers.dart';
+import '../../notifications/presentation/notification_providers.dart';
+import '../../wallet/presentation/wallet_providers.dart';
 
 class DashboardTab extends ConsumerWidget {
   const DashboardTab({super.key});
@@ -13,6 +15,8 @@ class DashboardTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final creditState = ref.watch(creditNotifierProvider);
+    final walletState = ref.watch(sellerWalletNotifierProvider);
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
     final user = authState.user;
     final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
@@ -55,10 +59,13 @@ class DashboardTab extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: const Badge(
-              label: Text('2'),
-              child: Icon(Icons.notifications_outlined),
-            ),
+            icon: unreadCount > 0
+                ? Badge(
+                    label: Text('$unreadCount'),
+                    backgroundColor: AppColors.primary,
+                    child: const Icon(Icons.notifications_outlined),
+                  )
+                : const Icon(Icons.notifications_outlined),
             onPressed: () => context.push('/notifications'),
           ),
           const SizedBox(width: 8),
@@ -242,7 +249,7 @@ class DashboardTab extends ConsumerWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        currencyFormatter.format(2500000),
+                        currencyFormatter.format(walletState.wallet?.balance ?? 4850000.0),
                         style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
@@ -254,18 +261,15 @@ class DashboardTab extends ConsumerWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-                            label: const Text('Nạp tiền VietQR'),
-                            onPressed: () => context.push('/wallet/deposit'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.arrow_outward_rounded, size: 18),
-                            label: const Text('Yêu cầu rút'),
-                            onPressed: () => context.push('/wallet/withdraw'),
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                            label: const Text('Rút tiền về ngân hàng'),
+                            onPressed: () => context.push('/wallet'),
                           ),
                         ),
                       ],

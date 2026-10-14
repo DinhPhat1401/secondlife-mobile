@@ -17,6 +17,8 @@ import '../../features/negotiations/presentation/screens/seller_negotiations_scr
 import '../../features/chat/domain/chat_models.dart';
 import '../../features/chat/presentation/screens/chat_inbox_screen.dart';
 import '../../features/chat/presentation/screens/chat_conversation_screen.dart';
+import '../../features/wallet/presentation/screens/seller_wallet_screen.dart';
+import '../../features/notifications/presentation/screens/notification_center_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -120,17 +122,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/wallet',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Ví Nội Bộ SecondLife')),
-          body: const Center(child: Text('Lịch Sử Biến Động Số Dư')),
-        ),
+        builder: (context, state) => const SellerWalletScreen(),
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Thông Báo')),
-          body: const Center(child: Text('Danh Sách Thông Báo')),
-        ),
+        builder: (context, state) => const NotificationCenterScreen(),
       ),
     ],
   );

@@ -53,6 +53,8 @@ class ApiEndpoints {
   static String postAiPriceEstimation(String postId) => '/api/v1/posts/$postId/ai-price-estimation';
   static String postShippingPackage(String postId) => '/api/v1/posts/$postId/shipping-package';
   static String postSubmit(String postId) => '/api/v1/posts/submit/$postId';
+  static String postDelete(String postId) => '/api/v1/posts/$postId';
+  static String postBoost(String postId) => '/api/v1/posts/$postId/boost';
 
   // AI Chat
   static const String aiChat = '/api/v1/ai/chat';
@@ -88,7 +90,7 @@ class ApiEndpoints {
   static String shipmentSync(String shipmentId) => '/api/v1/shipments/$shipmentId/sync';
   static String shipmentCancel(String shipmentId) => '/api/v1/shipments/$shipmentId/cancel';
 
-  // Inspection
+  // Inspection & Tamper Seal
   static const String inspectionMySellerOrders = '/api/v1/inspection/my-seller-orders';
   static const String inspectionMyBuyerOrders = '/api/v1/inspection/my-buyer-orders';
   static String inspectionOrder(String orderId) => '/api/v1/inspection/orders/$orderId';
@@ -96,6 +98,7 @@ class ApiEndpoints {
   static String inspectionPayFee(String orderId) => '/api/v1/inspection/orders/$orderId/pay-fee';
   static String inspectionSchedule(String orderId) => '/api/v1/inspector/orders/$orderId/schedule';
   static String inspectionStart(String orderId) => '/api/v1/inspector/orders/$orderId/start';
+  static String inspectionSealLookup(String sealId) => '/api/v1/inspection/seal/$sealId';
 
   // Wallets & Payout
   static const String walletMe = '/api/v1/wallets/me';
@@ -108,6 +111,9 @@ class ApiEndpoints {
   static const String notificationsUnreadCount = '/api/v1/notifications/unread-count';
   static String notificationMarkRead(String id) => '/api/v1/notifications/$id/read';
   static const String notificationReadAll = '/api/v1/notifications/read-all';
+  static String notificationDelete(String id) => '/api/v1/notifications/$id';
+  static const String notificationClearRead = '/api/v1/notifications/clear-read';
+  static const String notificationClearAll = '/api/v1/notifications/clear-all';
   static const String notificationDevices = '/api/v1/notifications/devices';
   static String notificationDeviceDelete(String token) => '/api/v1/notifications/devices/$token';
 }

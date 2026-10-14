@@ -7,6 +7,7 @@ import 'package:secondlife_app_seller/shared/widgets/sl_badge.dart';
 import 'package:secondlife_app_seller/shared/widgets/sl_button.dart';
 import '../../data/shipment_repository.dart';
 import '../../domain/shipment_models.dart';
+import '../widgets/tamper_seal_lookup_sheet.dart';
 
 final shipmentRepositoryProvider = Provider<ShipmentRepository>((ref) {
   final client = ref.watch(apiClientProvider);
@@ -69,6 +70,14 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
       appBar: AppBar(
         title: const Text('Theo Dõi Vận Đơn Lalamove'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.verified_outlined, color: Color(0xFF059669)),
+            tooltip: 'Tra cứu tem niêm phong',
+            onPressed: () {
+              final repo = ref.read(shipmentRepositoryProvider);
+              TamperSealLookupSheet.show(context, repository: repo);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.sync_rounded),
             tooltip: 'Đồng bộ hành trình',

@@ -145,3 +145,135 @@ class PostSubmitResponseModel {
     );
   }
 }
+
+enum ListingStatus {
+  draft('DRAFT', 'Bản nháp'),
+  pending('PENDING', 'Chờ duyệt'),
+  active('ACTIVE', 'Đang bán'),
+  reserved('RESERVED', 'Đang giữ chỗ'),
+  sold('SOLD', 'Đã bán'),
+  rejected('REJECTED', 'Bị từ chối'),
+  hidden('HIDDEN', 'Đã ẩn');
+
+  final String code;
+  final String label;
+
+  const ListingStatus(this.code, this.label);
+
+  static ListingStatus fromCode(String? code) {
+    switch (code?.toUpperCase()) {
+      case 'DRAFT':
+        return ListingStatus.draft;
+      case 'PENDING':
+        return ListingStatus.pending;
+      case 'RESERVED':
+        return ListingStatus.reserved;
+      case 'SOLD':
+        return ListingStatus.sold;
+      case 'REJECTED':
+        return ListingStatus.rejected;
+      case 'HIDDEN':
+        return ListingStatus.hidden;
+      case 'ACTIVE':
+      default:
+        return ListingStatus.active;
+    }
+  }
+}
+
+class SellerListingItemModel {
+  final String id;
+  final String title;
+  final String description;
+  final double price;
+  final ApplianceCondition itemCondition;
+  final List<String> imageUrls;
+  final ListingStatus status;
+  final String? rejectionReason;
+  final bool listingCreditCharged;
+  final double? aiSuggestedPrice;
+  final int? shippingWeight;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const SellerListingItemModel({
+    required this.id,
+    required this.title,
+    this.description = '',
+    required this.price,
+    this.itemCondition = ApplianceCondition.usedGood,
+    this.imageUrls = const [],
+    this.status = ListingStatus.active,
+    this.rejectionReason,
+    this.listingCreditCharged = false,
+    this.aiSuggestedPrice,
+    this.shippingWeight,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  String get primaryImageUrl {
+    if (imageUrls.isNotEmpty && imageUrls.first.isNotEmpty) {
+      return imageUrls.first;
+    }
+    return 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=500&q=80';
+  }
+
+  factory SellerListingItemModel.fromJson(Map<String, dynamic> json) {
+    List<String> images = [];
+    if (json['imageUrls'] is List) {
+      images = (json['imageUrls'] as List).map((e) => e.toString()).toList();
+    } else if (json['images'] is List) {
+      images = (json['images'] as List).map((e) => e.toString()).toList();
+    }
+
+    return SellerListingItemModel(
+      id: json['id']?.toString() ?? '',
+      title: json['title'] ?? 'Thiết bị gia dụng',
+      description: json['description'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      itemCondition: ApplianceCondition.fromCode(json['itemCondition']?.toString()),
+      imageUrls: images,
+      status: ListingStatus.fromCode(json['status']?.toString()),
+      rejectionReason: json['rejectionReason']?.toString(),
+      listingCreditCharged: json['listingCreditCharged'] == true,
+      aiSuggestedPrice: (json['aiSuggestedPrice'] as num?)?.toDouble(),
+      shippingWeight: (json['shippingWeight'] as num?)?.toInt(),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null,
+    );
+  }
+
+  SellerListingItemModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    double? price,
+    ApplianceCondition? itemCondition,
+    List<String>? imageUrls,
+    ListingStatus? status,
+    String? rejectionReason,
+    bool? listingCreditCharged,
+    double? aiSuggestedPrice,
+    int? shippingWeight,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return SellerListingItemModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      itemCondition: itemCondition ?? this.itemCondition,
+      imageUrls: imageUrls ?? this.imageUrls,
+      status: status ?? this.status,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      listingCreditCharged: listingCreditCharged ?? this.listingCreditCharged,
+      aiSuggestedPrice: aiSuggestedPrice ?? this.aiSuggestedPrice,
+      shippingWeight: shippingWeight ?? this.shippingWeight,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+
