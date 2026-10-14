@@ -23,39 +23,47 @@ class DashboardTab extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        titleSpacing: 20,
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: AppColors.primaryLight,
-              child: Text(
-                user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'S',
-                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user?.fullName ?? 'Người bán SecondLife',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                    overflow: TextOverflow.ellipsis,
+        titleSpacing: 16,
+        title: InkWell(
+          onTap: () => context.push('/profile'),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: AppColors.primaryLight,
+                  child: Text(
+                    user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'S',
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    user?.isSeller == true ? 'Shop Đã Xác Thực' : 'Chưa Định Danh Người Bán',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: user?.isSeller == true ? AppColors.success : AppColors.warning,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.fullName ?? 'Người bán SecondLife',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        user?.isSeller == true ? 'Shop Đã Xác Thực' : 'Chưa Định Danh Người Bán',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: user?.isSeller == true ? AppColors.success : AppColors.warning,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const Icon(Icons.chevron_right, size: 18, color: AppColors.textMuted),
+              ],
             ),
-          ],
+          ),
         ),
         actions: [
           IconButton(

@@ -8,7 +8,24 @@ import 'package:secondlife_app_seller/features/notifications/presentation/notifi
 import 'package:secondlife_app_seller/features/orders/presentation/order_providers.dart';
 import 'package:secondlife_app_seller/features/wallet/domain/wallet_models.dart';
 import 'package:secondlife_app_seller/features/wallet/presentation/wallet_providers.dart';
+import 'package:secondlife_app_seller/features/profile/domain/profile_models.dart';
+import 'package:secondlife_app_seller/features/profile/presentation/profile_providers.dart';
 import 'package:secondlife_app_seller/main.dart';
+
+class MockProfileNotifier extends ProfileNotifier {
+  @override
+  ProfileState build() {
+    return ProfileState(
+      isLoading: false,
+      profile: SellerProfileModel(
+        id: 'w-1',
+        email: 'seller@test.com',
+        fullName: 'Người bán Test',
+        updatedAt: null,
+      ),
+    );
+  }
+}
 
 class MockCreditNotifier extends CreditNotifier {
   @override
@@ -73,6 +90,7 @@ void main() {
           sellerListingsNotifierProvider.overrideWith(MockSellerListingsNotifier.new),
           sellerWalletNotifierProvider.overrideWith(MockSellerWalletNotifier.new),
           notificationNotifierProvider.overrideWith(MockNotificationNotifier.new),
+          profileNotifierProvider.overrideWith(MockProfileNotifier.new),
         ],
         child: const SecondLifeSellerApp(),
       ),

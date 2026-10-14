@@ -19,6 +19,7 @@ import '../../features/chat/presentation/screens/chat_inbox_screen.dart';
 import '../../features/chat/presentation/screens/chat_conversation_screen.dart';
 import '../../features/wallet/presentation/screens/seller_wallet_screen.dart';
 import '../../features/notifications/presentation/screens/notification_center_screen.dart';
+import '../../features/profile/presentation/screens/seller_profile_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -127,6 +128,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationCenterScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const SellerProfileScreen(),
       ),
     ],
   );
