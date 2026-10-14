@@ -13,6 +13,36 @@ class SlBadge extends StatelessWidget {
     required this.textColor,
   });
 
+  factory SlBadge.success(String label) => SlBadge(
+        label: label,
+        backgroundColor: AppColors.successLight,
+        textColor: AppColors.success,
+      );
+
+  factory SlBadge.warning(String label) => SlBadge(
+        label: label,
+        backgroundColor: AppColors.warningLight,
+        textColor: AppColors.warning,
+      );
+
+  factory SlBadge.info(String label) => SlBadge(
+        label: label,
+        backgroundColor: AppColors.infoLight,
+        textColor: AppColors.info,
+      );
+
+  factory SlBadge.error(String label) => SlBadge(
+        label: label,
+        backgroundColor: AppColors.errorLight,
+        textColor: AppColors.error,
+      );
+
+  factory SlBadge.neutral(String label) => SlBadge(
+        label: label,
+        backgroundColor: AppColors.divider,
+        textColor: AppColors.textSecondary,
+      );
+
   factory SlBadge.fromStatus(String status) {
     Color bg;
     Color fg;

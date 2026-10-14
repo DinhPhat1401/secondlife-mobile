@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../orders/presentation/screens/seller_orders_screen.dart';
+import '../../chat/presentation/screens/chat_inbox_screen.dart';
 import 'dashboard_tab.dart';
 
 class MainShellScreen extends ConsumerStatefulWidget {
@@ -17,9 +19,8 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   final List<Widget> _tabs = [
     const DashboardTab(),
     const Center(child: Text('Danh sách Tin Đăng')),
-    const Center(child: Text('Đơn Hàng & Vận Chuyển')),
-    const Center(child: Text('Hộp Thư Tin Nhắn')),
-    const Center(child: Text('Tài Khoản & Cài Đặt')),
+    const SellerOrdersScreen(),
+    const ChatInboxScreen(),
   ];
 
   @override

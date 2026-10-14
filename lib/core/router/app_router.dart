@@ -11,6 +11,12 @@ import '../../features/dashboard/presentation/main_shell_screen.dart';
 import '../../features/listings/presentation/screens/create_listing_wizard_screen.dart';
 import '../../features/onboarding/presentation/screens/address_map_picker_screen.dart';
 import '../../features/onboarding/presentation/screens/seller_onboarding_wizard_screen.dart';
+import '../../features/orders/presentation/screens/seller_orders_screen.dart';
+import '../../features/shipments/presentation/screens/shipment_tracking_screen.dart';
+import '../../features/negotiations/presentation/screens/seller_negotiations_screen.dart';
+import '../../features/chat/domain/chat_models.dart';
+import '../../features/chat/presentation/screens/chat_inbox_screen.dart';
+import '../../features/chat/presentation/screens/chat_conversation_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -84,6 +90,33 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/credits/ledger',
         builder: (context, state) => const CreditLedgerScreen(),
+      ),
+      GoRoute(
+        path: '/orders',
+        builder: (context, state) => const SellerOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/shipments/:id/tracking',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return ShipmentTrackingScreen(shipmentId: id);
+        },
+      ),
+      GoRoute(
+        path: '/negotiations',
+        builder: (context, state) => const SellerNegotiationsScreen(),
+      ),
+      GoRoute(
+        path: '/chats',
+        builder: (context, state) => const ChatInboxScreen(),
+      ),
+      GoRoute(
+        path: '/chats/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          final room = state.extra as ChatRoomModel?;
+          return ChatConversationScreen(roomId: id, room: room);
+        },
       ),
       GoRoute(
         path: '/wallet',
