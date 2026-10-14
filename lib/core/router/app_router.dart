@@ -5,7 +5,10 @@ import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/verify_email_screen.dart';
+import '../../features/credits/presentation/screens/buy_credits_screen.dart';
+import '../../features/credits/presentation/screens/credit_ledger_screen.dart';
 import '../../features/dashboard/presentation/main_shell_screen.dart';
+import '../../features/listings/presentation/screens/create_listing_wizard_screen.dart';
 import '../../features/onboarding/presentation/screens/address_map_picker_screen.dart';
 import '../../features/onboarding/presentation/screens/seller_onboarding_wizard_screen.dart';
 
@@ -57,10 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/create-listing',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Đăng Tin Đồ Gia Dụng')),
-          body: const Center(child: Text('Wizard Đăng Tin 6 Bước Trợ Lý AI')),
-        ),
+        builder: (context, state) => const CreateListingWizardScreen(),
       ),
       GoRoute(
         path: '/seller-onboarding',
@@ -79,10 +79,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/credits/buy',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Mua Gói Tín Dụng')),
-          body: const Center(child: Text('Bảng Giá & Chiết Khấu Gói Đăng Tin / AI')),
-        ),
+        builder: (context, state) => const BuyCreditsScreen(),
+      ),
+      GoRoute(
+        path: '/credits/ledger',
+        builder: (context, state) => const CreditLedgerScreen(),
       ),
       GoRoute(
         path: '/wallet',

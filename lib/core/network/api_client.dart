@@ -108,10 +108,16 @@ class ApiClient {
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
     T Function(dynamic json)? fromJsonT,
   }) async {
     try {
-      final res = await dio.post(path, data: data, queryParameters: queryParameters);
+      final res = await dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
       return ApiResponse.fromJson(res.data, fromJsonT);
     } on DioException catch (e) {
       throw AppException.fromDio(e);
@@ -121,10 +127,15 @@ class ApiClient {
   Future<ApiResponse<T>> put<T>(
     String path, {
     dynamic data,
+    Options? options,
     T Function(dynamic json)? fromJsonT,
   }) async {
     try {
-      final res = await dio.put(path, data: data);
+      final res = await dio.put(
+        path,
+        data: data,
+        options: options,
+      );
       return ApiResponse.fromJson(res.data, fromJsonT);
     } on DioException catch (e) {
       throw AppException.fromDio(e);

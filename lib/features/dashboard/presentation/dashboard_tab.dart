@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../credits/presentation/credit_providers.dart';
 
 class DashboardTab extends ConsumerWidget {
   const DashboardTab({super.key});
@@ -11,6 +12,7 @@ class DashboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
+    final creditState = ref.watch(creditNotifierProvider);
     final user = authState.user;
     final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
@@ -182,9 +184,9 @@ class DashboardTab extends ConsumerWidget {
                           children: [
                             const Text('Lượt Đăng Tin', style: TextStyle(color: Colors.white70, fontSize: 12)),
                             const SizedBox(height: 2),
-                            const Text(
-                              '10 lượt',
-                              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                            Text(
+                              '${creditState.balance.postCredits} lượt',
+                              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -197,9 +199,9 @@ class DashboardTab extends ConsumerWidget {
                           children: [
                             const Text('Lượt AI Định Giá', style: TextStyle(color: Colors.white70, fontSize: 12)),
                             const SizedBox(height: 2),
-                            const Text(
-                              '15 lượt',
-                              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                            Text(
+                              '${creditState.balance.valuationCredits} lượt',
+                              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
