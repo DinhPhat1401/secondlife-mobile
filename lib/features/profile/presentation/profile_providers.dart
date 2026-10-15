@@ -43,8 +43,12 @@ class ProfileState {
 class ProfileNotifier extends Notifier<ProfileState> {
   @override
   ProfileState build() {
-    Future.microtask(() => loadProfile());
-    return const ProfileState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => loadProfile());
+      return const ProfileState(isLoading: true);
+    }
+    return const ProfileState();
   }
 
   ProfileRepository get _repository => ref.read(profileRepositoryProvider);

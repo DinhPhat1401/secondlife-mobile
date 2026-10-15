@@ -58,7 +58,6 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
                   separatorBuilder: (context, index) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final item = ledger[index];
-                    final isListing = item.creditType == 'LISTING';
                     final isPositive = item.isPositive;
 
                     return Container(
@@ -95,7 +94,7 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  'Loại: ${isListing ? "Lượt đăng tin" : "Định giá AI"} • Sau GD: ${item.balanceAfter}',
+                                  'Loại: ${item.creditTypeLabel} • Sau GD: ${item.balanceAfter}',
                                   style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                                 ),
                                 if (item.createdAt.isNotEmpty) ...[

@@ -36,6 +36,9 @@ class ApiEndpoints {
   static const String sellerCreditPricing = '/api/v1/seller/credit-pricing';
   static const String sellerCreditPurchases = '/api/v1/seller/credit-purchases';
   static const String sellerCreditLedger = '/api/v1/seller/credit-ledger';
+  static const String topupPackages = '/api/v1/topup/packages';
+  static const String topupMyCredit = '/api/v1/topup/my-credit';
+  static String topupPurchase(String packageId) => '/api/v1/topup/purchase/$packageId';
 
   // Categories & Items
   static const String categories = '/api/v1/categories';

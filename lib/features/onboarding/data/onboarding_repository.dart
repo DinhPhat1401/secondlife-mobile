@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
+import '../../../core/network/error_handler.dart';
 import '../domain/seller_onboarding_model.dart';
 import '../domain/seller_verification_model.dart';
 
@@ -75,8 +76,9 @@ class OnboardingRepository {
       );
       if (response.data == null) return null;
       return SellerVerificationModel.fromJson(response.data!);
-    } catch (_) {
-      return null;
+    } on AppException catch (e) {
+      if (e.statusCode == 404) return null;
+      rethrow;
     }
   }
 

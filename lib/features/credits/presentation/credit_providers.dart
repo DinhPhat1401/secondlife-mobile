@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:secondlife_app_seller/features/auth/presentation/auth_providers.dart';
+import '../../wallet/presentation/wallet_providers.dart';
 import '../data/credit_repository.dart';
 import '../domain/credit_models.dart';
 
@@ -16,6 +17,7 @@ class CreditState {
   final List<CreditDiscountTierModel> discountTiers;
   final CreditQuoteModel quote;
   final List<CreditLedgerItemModel> ledger;
+  final List<TopupPackageModel> topupPackages;
 
   const CreditState({
     this.isLoading = false,
@@ -25,6 +27,7 @@ class CreditState {
     this.discountTiers = const [],
     this.quote = const CreditQuoteModel(),
     this.ledger = const [],
+    this.topupPackages = const [],
   });
 
   CreditState copyWith({
@@ -35,6 +38,7 @@ class CreditState {
     List<CreditDiscountTierModel>? discountTiers,
     CreditQuoteModel? quote,
     List<CreditLedgerItemModel>? ledger,
+    List<TopupPackageModel>? topupPackages,
   }) {
     return CreditState(
       isLoading: isLoading ?? this.isLoading,
@@ -44,6 +48,7 @@ class CreditState {
       discountTiers: discountTiers ?? this.discountTiers,
       quote: quote ?? this.quote,
       ledger: ledger ?? this.ledger,
+      topupPackages: topupPackages ?? this.topupPackages,
     );
   }
 }
@@ -51,8 +56,12 @@ class CreditState {
 class CreditNotifier extends Notifier<CreditState> {
   @override
   CreditState build() {
-    Future.microtask(() => loadInitialData());
-    return const CreditState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => loadInitialData());
+      return const CreditState(isLoading: true);
+    }
+    return const CreditState();
   }
 
   CreditRepository get _repo => ref.read(creditRepositoryProvider);
@@ -61,8 +70,19 @@ class CreditNotifier extends Notifier<CreditState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final balance = await _repo.getCredits();
-      final pricingData = await _repo.getPricing(listingQuantity: 5, valuationQuantity: 5);
+      state = state.copyWith(balance: balance);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return;
+    }
 
+    try {
+      final packages = await _repo.getTopupPackages();
+      state = state.copyWith(topupPackages: packages);
+    } catch (_) {}
+
+    try {
+      final pricingData = await _repo.getPricing();
       final prices = pricingData['prices'] as List<CreditPricingRuleModel>? ?? [];
       final discountTiers = pricingData['discountTiers'] as List<CreditDiscountTierModel>? ?? [];
       final quote = pricingData['quote'] as CreditQuoteModel? ??
@@ -75,13 +95,13 @@ class CreditNotifier extends Notifier<CreditState> {
 
       state = state.copyWith(
         isLoading: false,
-        balance: balance,
         prices: prices,
         discountTiers: discountTiers,
         quote: quote,
       );
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    } catch (_) {
+      // If server has not configured credit pricing yet, finish loading with existing state
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -178,6 +198,20 @@ class CreditNotifier extends Notifier<CreditState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return null;
+    }
+  }
+
+  Future<bool> purchaseTopupPackage(String packageId) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final newBalance = await _repo.purchaseTopupPackage(packageId);
+      state = state.copyWith(isLoading: false, balance: newBalance);
+      // Reload wallet balance to reflect payment deduction
+      ref.read(sellerWalletNotifierProvider.notifier).loadWalletData();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
     }
   }
 

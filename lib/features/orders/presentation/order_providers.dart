@@ -40,8 +40,12 @@ class OrderListState {
 class OrderListNotifier extends Notifier<OrderListState> {
   @override
   OrderListState build() {
-    Future.microtask(() => loadOrders());
-    return const OrderListState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => loadOrders());
+      return const OrderListState(isLoading: true);
+    }
+    return const OrderListState();
   }
 
   OrderRepository get _repo => ref.read(orderRepositoryProvider);

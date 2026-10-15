@@ -56,8 +56,12 @@ class SellerListingsState {
 class SellerListingsNotifier extends Notifier<SellerListingsState> {
   @override
   SellerListingsState build() {
-    Future.microtask(() => loadListings());
-    return const SellerListingsState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => loadListings());
+      return const SellerListingsState(isLoading: true);
+    }
+    return const SellerListingsState();
   }
 
   PostRepository get _repository => ref.read(postRepositoryProvider);

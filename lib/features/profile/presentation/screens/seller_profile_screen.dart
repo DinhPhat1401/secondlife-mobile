@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/auth_providers.dart';
-import '../../domain/profile_models.dart';
 import '../profile_providers.dart';
 import '../widgets/change_password_sheet.dart';
 import '../widgets/edit_profile_sheet.dart';

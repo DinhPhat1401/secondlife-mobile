@@ -191,4 +191,56 @@ class CreditLedgerItemModel {
         return entryType;
     }
   }
+
+  String get creditTypeLabel {
+    switch (creditType.toUpperCase()) {
+      case 'LISTING':
+        return 'Lượt đăng tin';
+      case 'AI_CHAT':
+      case 'CHAT':
+        return 'Lượt Chat AI';
+      case 'VALUATION':
+        return 'Lượt định giá AI';
+      default:
+        return creditType;
+    }
+  }
+}
+
+class TopupPackageModel {
+  final String id;
+  final String name;
+  final String description;
+  final int postCredits;
+  final int chatCredits;
+  final int valuationCredits;
+  final double price;
+  final double discountPercentage;
+
+  const TopupPackageModel({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.postCredits,
+    required this.chatCredits,
+    required this.valuationCredits,
+    required this.price,
+    this.discountPercentage = 0.0,
+  });
+
+  factory TopupPackageModel.fromJson(Map<String, dynamic> json) {
+    return TopupPackageModel(
+      id: json['id']?.toString() ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      postCredits: (json['postCredits'] as num?)?.toInt() ?? 0,
+      chatCredits: (json['chatCredits'] as num?)?.toInt() ?? 0,
+      valuationCredits: (json['valuationCredits'] as num?)?.toInt() ?? 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      discountPercentage: (json['discountPercentage'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  bool get isCombo => name.toLowerCase().contains('combo');
+  double get originalPrice => discountPercentage > 0 ? (price / (1 - discountPercentage / 100)) : price;
 }

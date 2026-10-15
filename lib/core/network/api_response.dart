@@ -12,15 +12,48 @@ class ApiResponse<T> {
   });
 
   factory ApiResponse.fromJson(
-    Map<String, dynamic> json,
+    dynamic json,
     T Function(dynamic json)? fromJsonT,
   ) {
-    final rawData = json['data'];
+    if (json == null) {
+      return ApiResponse<T>(success: true, message: '', data: null);
+    }
+    if (json is List) {
+      return ApiResponse<T>(
+        success: true,
+        message: '',
+        data: fromJsonT != null ? fromJsonT(json) : json as T?,
+      );
+    }
+    if (json is Map<String, dynamic>) {
+      final success = json['success'] as bool? ?? true;
+      final message = json['message'] as String? ?? '';
+      final timestamp = json['timestamp'] as String?;
+
+      if (json.containsKey('success') && !success && !json.containsKey('data')) {
+        return ApiResponse<T>(
+          success: false,
+          message: message,
+          data: null,
+          timestamp: timestamp,
+        );
+      }
+
+      final hasDataKey = json.containsKey('data');
+      final rawData = hasDataKey ? json['data'] : json;
+
+      return ApiResponse<T>(
+        success: success,
+        message: message,
+        data: rawData != null && fromJsonT != null ? fromJsonT(rawData) : rawData as T?,
+        timestamp: timestamp,
+      );
+    }
+
     return ApiResponse<T>(
-      success: json['success'] as bool? ?? true,
-      message: json['message'] as String? ?? '',
-      data: rawData != null && fromJsonT != null ? fromJsonT(rawData) : rawData as T?,
-      timestamp: json['timestamp'] as String?,
+      success: true,
+      message: '',
+      data: fromJsonT != null ? fromJsonT(json) : json as T?,
     );
   }
 }
@@ -43,26 +76,43 @@ class PageResponse<T> {
   });
 
   factory PageResponse.fromJson(
-    Map<String, dynamic> json,
+    dynamic json,
     T Function(dynamic item) fromJsonItem,
   ) {
-    // Handle both Spring Data Page ('content') and custom Page ('items')
-    final rawList = json['items'] ?? json['content'] ?? [];
-    final List<T> items = (rawList as List).map((i) => fromJsonItem(i)).toList();
+    if (json == null) {
+      return PageResponse<T>(items: [], page: 0, size: 0, totalElements: 0, totalPages: 0, isLast: true);
+    }
+    if (json is List) {
+      final items = json.map((i) => fromJsonItem(i)).toList();
+      return PageResponse<T>(
+        items: items,
+        page: 0,
+        size: items.length,
+        totalElements: items.length,
+        totalPages: 1,
+        isLast: true,
+      );
+    }
+    if (json is Map<String, dynamic>) {
+      final rawData = json['data'] is Map<String, dynamic> ? json['data'] as Map<String, dynamic> : json;
+      final rawList = rawData['items'] ?? rawData['content'] ?? [];
+      final List<T> items = (rawList as List).map((i) => fromJsonItem(i)).toList();
 
-    final page = json['page'] ?? json['number'] ?? 0;
-    final size = json['size'] ?? 10;
-    final totalElements = json['totalElements'] ?? items.length;
-    final totalPages = json['totalPages'] ?? 1;
-    final isLast = json['isLast'] ?? json['last'] ?? (page >= totalPages - 1);
+      final page = rawData['page'] ?? rawData['number'] ?? rawData['pageNumber'] ?? 0;
+      final size = rawData['size'] ?? rawData['pageSize'] ?? (items.isNotEmpty ? items.length : 10);
+      final totalElements = rawData['totalElements'] ?? items.length;
+      final totalPages = rawData['totalPages'] ?? 1;
+      final isLast = rawData['isLast'] ?? rawData['last'] ?? (page >= totalPages - 1);
 
-    return PageResponse<T>(
-      items: items,
-      page: (page as num).toInt(),
-      size: (size as num).toInt(),
-      totalElements: (totalElements as num).toInt(),
-      totalPages: (totalPages as num).toInt(),
-      isLast: isLast as bool,
-    );
+      return PageResponse<T>(
+        items: items,
+        page: (page as num).toInt(),
+        size: (size as num).toInt(),
+        totalElements: (totalElements as num).toInt(),
+        totalPages: (totalPages as num).toInt(),
+        isLast: isLast as bool,
+      );
+    }
+    return PageResponse<T>(items: [], page: 0, size: 0, totalElements: 0, totalPages: 0, isLast: true);
   }
 }

@@ -51,8 +51,12 @@ class SellerWalletState {
 class SellerWalletNotifier extends Notifier<SellerWalletState> {
   @override
   SellerWalletState build() {
-    Future.microtask(() => loadWalletData());
-    return const SellerWalletState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => loadWalletData());
+      return const SellerWalletState(isLoading: true);
+    }
+    return const SellerWalletState();
   }
 
   WalletRepository get _repository => ref.read(walletRepositoryProvider);
@@ -130,4 +134,16 @@ class SellerWalletNotifier extends Notifier<SellerWalletState> {
 final sellerWalletNotifierProvider =
     NotifierProvider<SellerWalletNotifier, SellerWalletState>(
   SellerWalletNotifier.new,
+);
+
+class HideWalletBalanceNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
+final hideWalletBalanceProvider =
+    NotifierProvider<HideWalletBalanceNotifier, bool>(
+  HideWalletBalanceNotifier.new,
 );

@@ -14,7 +14,7 @@ class ChatRepository {
   ChatRepository(this._client);
 
   Future<List<ChatRoomModel>> getChatRooms() async {
-    final response = await _client.get('/v1/chats');
+    final response = await _client.get('/api/v1/chats');
     final raw = response.data;
     final data = (raw is Map && raw.containsKey('data')) ? raw['data'] : raw;
 
@@ -23,13 +23,15 @@ class ChatRepository {
       list = data;
     } else if (data is Map && data.containsKey('content') && data['content'] is List) {
       list = data['content'] as List;
+    } else if (data is Map && data.containsKey('items') && data['items'] is List) {
+      list = data['items'] as List;
     }
 
     return list.map((item) => ChatRoomModel.fromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<List<ChatMessageModel>> getMessages(String roomId) async {
-    final response = await _client.get('/v1/chats/$roomId/messages');
+    final response = await _client.get('/api/v1/chats/$roomId/messages');
     final raw = response.data;
     final data = (raw is Map && raw.containsKey('data')) ? raw['data'] : raw;
 
@@ -38,6 +40,8 @@ class ChatRepository {
       list = data;
     } else if (data is Map && data.containsKey('content') && data['content'] is List) {
       list = data['content'] as List;
+    } else if (data is Map && data.containsKey('items') && data['items'] is List) {
+      list = data['items'] as List;
     }
 
     return list.map((item) => ChatMessageModel.fromJson(item as Map<String, dynamic>)).toList();
@@ -45,7 +49,7 @@ class ChatRepository {
 
   Future<ChatMessageModel> sendMessage(String roomId, String messageContent) async {
     final response = await _client.post(
-      '/v1/chats/$roomId/messages',
+      '/api/v1/chats/$roomId/messages',
       data: {'messageContent': messageContent},
     );
     final raw = response.data;
@@ -54,7 +58,7 @@ class ChatRepository {
   }
 
   Future<ChatRoomModel> getOrCreateRoom(String postId) async {
-    final response = await _client.post('/v1/chats/rooms?postId=$postId');
+    final response = await _client.post('/api/v1/chats/rooms?postId=$postId');
     final raw = response.data;
     final data = (raw is Map && raw.containsKey('data')) ? raw['data'] : raw;
     return ChatRoomModel.fromJson(data as Map<String, dynamic>);

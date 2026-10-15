@@ -47,8 +47,12 @@ class NotificationState {
 class NotificationNotifier extends Notifier<NotificationState> {
   @override
   NotificationState build() {
-    Future.microtask(() => loadData());
-    return const NotificationState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => loadData());
+      return const NotificationState(isLoading: true);
+    }
+    return const NotificationState();
   }
 
   NotificationRepository get _repository => ref.read(notificationRepositoryProvider);

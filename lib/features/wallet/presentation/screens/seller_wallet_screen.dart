@@ -35,6 +35,7 @@ class _SellerWalletScreenState extends ConsumerState<SellerWalletScreen>
     final wallet = walletState.wallet;
     final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
     final dateFormatter = DateFormat('dd/MM/yyyy HH:mm');
+    final hideBalance = ref.watch(hideWalletBalanceProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -110,13 +111,32 @@ class _SellerWalletScreenState extends ConsumerState<SellerWalletScreen>
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        currencyFormatter.format(wallet?.balance ?? 0),
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            hideBalance
+                                ? '•••••••• đ'
+                                : currencyFormatter.format(wallet?.balance ?? 0),
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: Icon(
+                              hideBalance ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                            tooltip: hideBalance ? 'Hiện số dư' : 'Ẩn số dư',
+                            onPressed: () {
+                              ref.read(hideWalletBalanceProvider.notifier).toggle();
+                            },
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 14),
                       const Divider(color: Colors.white24, height: 1),
@@ -139,7 +159,9 @@ class _SellerWalletScreenState extends ConsumerState<SellerWalletScreen>
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  currencyFormatter.format(wallet?.pendingBalance ?? 0),
+                                  hideBalance
+                                      ? '•••••••• đ'
+                                      : currencyFormatter.format(wallet?.pendingBalance ?? 0),
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -232,30 +254,44 @@ class _SellerWalletScreenState extends ConsumerState<SellerWalletScreen>
                   controller: _tabController,
                   children: [
                     // Tab 1: Transactions
-                    walletState.transactions.isEmpty
-                        ? _buildEmptyTab('Chưa có biến động số dư nào')
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: walletState.transactions.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 10),
-                            itemBuilder: (ctx, idx) {
-                              final tx = walletState.transactions[idx];
-                              return _buildTransactionCard(tx, currencyFormatter, dateFormatter);
-                            },
-                          ),
+                    Builder(
+                      builder: (context) {
+                        final sortedTxs = [...walletState.transactions]
+                          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                        if (sortedTxs.isEmpty) {
+                          return _buildEmptyTab('Chưa có biến động số dư nào');
+                        }
+                        return ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: sortedTxs.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemBuilder: (ctx, idx) {
+                            final tx = sortedTxs[idx];
+                            return _buildTransactionCard(tx, currencyFormatter, dateFormatter);
+                          },
+                        );
+                      },
+                    ),
 
                     // Tab 2: Withdrawals
-                    walletState.withdrawals.isEmpty
-                        ? _buildEmptyTab('Chưa có yêu cầu rút tiền nào')
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: walletState.withdrawals.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 10),
-                            itemBuilder: (ctx, idx) {
-                              final wd = walletState.withdrawals[idx];
-                              return _buildWithdrawalCard(wd, currencyFormatter, dateFormatter);
-                            },
-                          ),
+                    Builder(
+                      builder: (context) {
+                        final sortedWds = [...walletState.withdrawals]
+                          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                        if (sortedWds.isEmpty) {
+                          return _buildEmptyTab('Chưa có yêu cầu rút tiền nào');
+                        }
+                        return ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: sortedWds.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemBuilder: (ctx, idx) {
+                            final wd = sortedWds[idx];
+                            return _buildWithdrawalCard(wd, currencyFormatter, dateFormatter);
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -333,7 +369,7 @@ class _SellerWalletScreenState extends ConsumerState<SellerWalletScreen>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${isCredit ? "+" : "-"}${currencyFormatter.format(tx.amount)}',
+                '${isCredit ? "+" : "-"}${currencyFormatter.format(tx.amount.abs())}',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -373,7 +409,6 @@ class _SellerWalletScreenState extends ConsumerState<SellerWalletScreen>
         statusBgColor = const Color(0xFFF3F4F6);
         break;
       case WithdrawalStatus.pendingReview:
-      default:
         statusColor = AppColors.warning;
         statusBgColor = AppColors.warningLight;
         break;

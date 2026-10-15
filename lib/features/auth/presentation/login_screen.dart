@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/sl_button.dart';
 import '../../../shared/widgets/sl_text_field.dart';
@@ -15,8 +16,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController(text: 'seller@secondlife.com');
+  final _passwordController = TextEditingController(text: 'seller@123456');
   bool _obscurePassword = true;
 
   @override
@@ -48,6 +49,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     }
+  }
+
+  void _showServerUrlDialog() {
+    final controller = TextEditingController(text: AppConfig.baseUrl);
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: const Text('Cấu hình URL Máy chủ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Nhập địa chỉ máy chủ backend hoặc chọn nhanh:',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Base URL',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ActionChip(
+                    label: const Text('Emulator (10.0.2.2)', style: TextStyle(fontSize: 12)),
+                    onPressed: () => controller.text = 'http://10.0.2.2:8080',
+                  ),
+                  ActionChip(
+                    label: const Text('ADB USB (127.0.0.1)', style: TextStyle(fontSize: 12)),
+                    onPressed: () => controller.text = 'http://127.0.0.1:8080',
+                  ),
+                  ActionChip(
+                    label: const Text('Wi-Fi PC (172.16.30.181)', style: TextStyle(fontSize: 12)),
+                    onPressed: () => controller.text = 'http://172.16.30.181:8080',
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Đóng'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newUrl = controller.text.trim();
+                if (newUrl.isNotEmpty) {
+                  setState(() {
+                    AppConfig.customBaseUrl = newUrl;
+                  });
+                  ref.invalidate(apiClientProvider);
+                  Navigator.pop(dialogCtx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã cập nhật máy chủ: $newUrl'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Lưu'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -165,6 +241,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Server URL indicator with Quick Switch Dialog
+                  GestureDetector(
+                    onTap: _showServerUrlDialog,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.dns_outlined, size: 14, color: AppColors.textMuted),
+                          const SizedBox(width: 6),
+                          Text(
+                            AppConfig.baseUrl,
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.tune_rounded, size: 14, color: AppColors.primary),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

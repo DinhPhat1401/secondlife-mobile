@@ -104,7 +104,9 @@ class SellerOrderModel {
   });
 
   factory SellerOrderModel.fromJson(Map<String, dynamic> json) {
-    final itemPrice = (json['itemPrice'] as num?)?.toDouble() ??
+    final itemPrice = (json['finalPrice'] as num?)?.toDouble() ??
+        (json['itemPrice'] as num?)?.toDouble() ??
+        (json['totalPaid'] as num?)?.toDouble() ??
         (json['totalAmount'] as num?)?.toDouble() ??
         (json['price'] as num?)?.toDouble() ??
         0.0;

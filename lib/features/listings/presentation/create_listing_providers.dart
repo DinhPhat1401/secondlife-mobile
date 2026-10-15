@@ -160,6 +160,10 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
       state = state.copyWith(errorMessage: 'Vui lòng chọn ít nhất 3 ảnh thiết bị');
       return false;
     }
+    if (state.categoryId == null || state.categoryId!.isEmpty) {
+      state = state.copyWith(errorMessage: 'Vui lòng chọn Danh Mục Thiết Bị trước khi phân tích AI');
+      return false;
+    }
 
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
@@ -168,6 +172,8 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
         categoryId: state.categoryId,
         itemId: state.itemId,
         itemCondition: state.condition.code,
+        brand: state.brand,
+        model: state.model,
       );
 
       final initialMessages = <AiChatMessageModel>[];
@@ -188,6 +194,9 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
         aiSessionId: res.aiSessionId,
         suggestedQuestions: res.suggestedQuestions,
         chatMessages: initialMessages,
+        description: (res.visualReport != null && res.visualReport!.isNotEmpty)
+            ? res.visualReport!
+            : state.description,
         step: 1, // Advance to AI Chat step
       );
       return true;
@@ -314,6 +323,10 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
         'brand': state.brand,
         'model': state.model,
         'conditionGrade': state.condition.code,
+        'shippingWeight': state.shippingPackage.weightGrams,
+        'shippingLength': state.shippingPackage.lengthCm,
+        'shippingWidth': state.shippingPackage.widthCm,
+        'shippingHeight': state.shippingPackage.heightCm,
         'packageWeightGrams': state.shippingPackage.weightGrams,
         'packageLengthCm': state.shippingPackage.lengthCm,
         'packageWidthCm': state.shippingPackage.widthCm,

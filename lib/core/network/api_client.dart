@@ -33,6 +33,9 @@ class ApiClient {
   QueuedInterceptor _createAuthInterceptor() {
     return QueuedInterceptorsWrapper(
       onRequest: (options, handler) async {
+        // Dynamically ensure request uses the latest configured baseUrl
+        options.baseUrl = AppConfig.baseUrl;
+
         // Do not attach token for public auth endpoints
         final path = options.path;
         if (!path.startsWith('/api/auth/login') &&

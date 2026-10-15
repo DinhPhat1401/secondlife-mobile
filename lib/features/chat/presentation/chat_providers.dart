@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../auth/presentation/auth_providers.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_models.dart';
 
@@ -32,8 +33,12 @@ final chatRoomsNotifierProvider =
 class ChatRoomsNotifier extends Notifier<ChatRoomsState> {
   @override
   ChatRoomsState build() {
-    Future.microtask(() => fetchRooms());
-    return const ChatRoomsState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => fetchRooms());
+      return const ChatRoomsState(isLoading: true);
+    }
+    return const ChatRoomsState();
   }
 
   ChatRepository get _repository => ref.read(chatRepositoryProvider);

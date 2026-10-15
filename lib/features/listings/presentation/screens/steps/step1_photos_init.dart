@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:secondlife_app_seller/core/theme/app_colors.dart';
 import 'package:secondlife_app_seller/shared/widgets/sl_button.dart';
 import 'package:secondlife_app_seller/features/listings/presentation/create_listing_providers.dart';
+import 'package:secondlife_app_seller/features/catalog/presentation/catalog_providers.dart';
 
 class Step1PhotosInit extends ConsumerStatefulWidget {
   const Step1PhotosInit({super.key});
@@ -98,6 +99,9 @@ class _Step1PhotosInitState extends ConsumerState<Step1PhotosInit> {
   Widget build(BuildContext context) {
     final state = ref.watch(createListingNotifierProvider);
     final photos = state.photos;
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final selectedCategoryId = state.categoryId ?? '';
+    final itemsAsync = ref.watch(itemsByCategoryProvider(selectedCategoryId));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -127,7 +131,7 @@ class _Step1PhotosInitState extends ConsumerState<Step1PhotosInit> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Chụp đủ tối thiểu 3 ảnh rõ nét (đặc biệt là tem thông số kỹ thuật) để trợ lý AI tự động nhận diện model, năm sản xuất và tình trạng máy.',
+                        'Chọn danh mục và chụp đủ tối thiểu 3 ảnh rõ nét (đặc biệt là tem thông số) để trợ lý AI tự động nhận diện model, năm sản xuất và gợi ý mô tả chi tiết.',
                         style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
                       ),
                     ],
@@ -136,7 +140,162 @@ class _Step1PhotosInitState extends ConsumerState<Step1PhotosInit> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
+
+          // Category & Item Selector Card
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: (state.errorMessage != null && (state.categoryId == null || state.categoryId!.isEmpty))
+                    ? AppColors.error
+                    : AppColors.border,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.category_outlined, size: 18, color: AppColors.primary),
+                    SizedBox(width: 8),
+                    Text(
+                      'Danh Mục Thiết Bị Gia Dụng *',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                categoriesAsync.when(
+                  data: (categories) => DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      hintText: 'Chọn danh mục thiết bị',
+                      hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    initialValue: categories.any((c) => c.id == state.categoryId) ? state.categoryId : null,
+                    items: categories.map((cat) {
+                      return DropdownMenuItem<String>(
+                        value: cat.id,
+                        child: Text(cat.name, style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        ref.read(createListingNotifierProvider.notifier).updateBasicSpecs(
+                              categoryId: val,
+                              itemId: '',
+                            );
+                      }
+                    },
+                  ),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: LinearProgressIndicator(),
+                  ),
+                  error: (err, stack) => const Text(
+                    'Không thể tải danh mục. Vui lòng kiểm tra kết nối.',
+                    style: TextStyle(color: AppColors.error, fontSize: 12),
+                  ),
+                ),
+
+                if (selectedCategoryId.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Loại Thiết Bị Cụ Thể (Tùy chọn)',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 6),
+                  itemsAsync.when(
+                    data: (items) => DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        hintText: 'Chọn loại thiết bị (Nồi cơm, Lò vi sóng...)',
+                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                      ),
+                      initialValue: items.any((i) => i.id == state.itemId) ? state.itemId : null,
+                      items: items.map((item) {
+                        return DropdownMenuItem<String>(
+                          value: item.id,
+                          child: Text(item.name, style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          ref.read(createListingNotifierProvider.notifier).updateBasicSpecs(itemId: val);
+                        }
+                      },
+                    ),
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: LinearProgressIndicator(),
+                    ),
+                    error: (err, stack) => const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Photos Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Hình Ảnh Thiết Bị Thực Tế *',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
+              ),
+              Text(
+                '${photos.length}/6 ảnh (Tối thiểu 3)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: photos.length >= 3 ? AppColors.success : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
 
           // Photo Grid (6 slots)
           GridView.builder(
@@ -268,6 +427,15 @@ class _Step1PhotosInitState extends ConsumerState<Step1PhotosInit> {
             isLoading: state.isLoading,
             onPressed: photos.length >= 3
                 ? () async {
+                    if (state.categoryId == null || state.categoryId!.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Vui lòng chọn Danh Mục Thiết Bị trước khi phân tích AI'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                      return;
+                    }
                     await ref.read(createListingNotifierProvider.notifier).initPost();
                   }
                 : null,

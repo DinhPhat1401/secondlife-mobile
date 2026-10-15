@@ -85,50 +85,34 @@ class AuthRepository {
   }
 
   Future<void> sendEmailVerification(String email) async {
-    try {
-      await client.post(
-        ApiEndpoints.sendEmailVerification,
-        data: {'email': email.trim().toLowerCase()},
-      ).timeout(const Duration(seconds: 2));
-    } catch (_) {
-      // Bỏ qua lỗi kết nối máy chủ khi demo offline
-    }
+    await client.post(
+      ApiEndpoints.sendEmailVerification,
+      data: {'email': email.trim().toLowerCase()},
+    );
   }
 
   Future<void> confirmEmailVerification({
     required String email,
     required String otp,
   }) async {
-    try {
-      await client.post(
-        ApiEndpoints.confirmEmailVerification,
-        data: {
-          'email': email.trim().toLowerCase(),
-          'otp': otp.trim(),
-        },
-      ).timeout(const Duration(seconds: 2));
-    } catch (_) {
-      // Bỏ qua lỗi kết nối máy chủ khi demo offline
-    }
+    await client.post(
+      ApiEndpoints.confirmEmailVerification,
+      data: {
+        'email': email.trim().toLowerCase(),
+        'otp': otp.trim(),
+      },
+    );
   }
 
   Future<UserModel?> getCurrentUser() async {
     final token = await storage.getAccessToken();
     if (token == null || token.isEmpty) return null;
 
-    try {
-      final response = await client.get<Map<String, dynamic>>(ApiEndpoints.userMe);
-      if (response.data != null) {
-        final user = UserModel.fromJson(response.data!);
-        await storage.saveUser(user.toJson());
-        return user;
-      }
-    } catch (_) {
-      // Fallback to cached user if offline
-      final cached = await storage.getUser();
-      if (cached != null) {
-        return UserModel.fromJson(cached);
-      }
+    final response = await client.get<Map<String, dynamic>>(ApiEndpoints.userMe);
+    if (response.data != null) {
+      final user = UserModel.fromJson(response.data!);
+      await storage.saveUser(user.toJson());
+      return user;
     }
     return null;
   }

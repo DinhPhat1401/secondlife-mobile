@@ -15,17 +15,18 @@ class AppException implements Exception {
   String toString() => message;
 
   factory AppException.fromDio(DioException error) {
+    final targetUrl = error.requestOptions.baseUrl;
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.sendTimeout ||
         error.type == DioExceptionType.receiveTimeout) {
       return AppException(
-        message: 'Kết nối máy chủ quá hạn. Vui lòng kiểm tra lại mạng.',
+        message: 'Kết nối máy chủ quá hạn ($targetUrl). Vui lòng kiểm tra lại mạng.',
       );
     }
 
     if (error.type == DioExceptionType.connectionError) {
       return AppException(
-        message: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra cổng mạng (8080).',
+        message: 'Không thể kết nối đến máy chủ ($targetUrl). Vui lòng kiểm tra cổng mạng.',
       );
     }
 
@@ -39,6 +40,25 @@ class AppException implements Exception {
         final data = response.data as Map<String, dynamic>;
         message = data['message'] ?? data['error'];
         errorCode = data['errorCode'] ?? data['code'];
+
+        if (data['errors'] is List && (data['errors'] as List).isNotEmpty) {
+          final errorList = (data['errors'] as List).map((e) {
+            if (e is Map) {
+              final field = e['field']?.toString();
+              final msg = e['message']?.toString() ?? '';
+              if (field != null && field.isNotEmpty) {
+                final vietnameseField = _fieldTranslations[field] ?? field;
+                return '$vietnameseField ($msg)';
+              }
+              return msg;
+            }
+            return e.toString();
+          }).where((s) => s.isNotEmpty).toList();
+
+          if (errorList.isNotEmpty) {
+            message = errorList.join(', ');
+          }
+        }
       } else if (response.data is String && (response.data as String).isNotEmpty) {
         message = response.data;
       }
@@ -89,5 +109,20 @@ class AppException implements Exception {
     'SIMILAR_LISTING_COOLDOWN': 'Bạn vừa đăng một sản phẩm tương tự trong 24h qua. Hãy sử dụng tính năng Đẩy tin (Re-up).',
     'WALLET_INSUFFICIENT_BALANCE': 'Số dư trong ví không đủ để thực hiện giao dịch này.',
     'INSPECTION_RESULT_IMMUTABLE': 'Biên bản kiểm định này đã nộp và không thể chỉnh sửa.',
+  };
+
+  static const Map<String, String> _fieldTranslations = {
+    'categoryId': 'Danh mục sản phẩm',
+    'images': 'Hình ảnh sản phẩm',
+    'itemId': 'Loại thiết bị',
+    'brand': 'Thương hiệu',
+    'model': 'Mã model',
+    'price': 'Giá bán',
+    'title': 'Tiêu đề tin đăng',
+    'description': 'Mô tả',
+    'shippingWeight': 'Khối lượng đóng gói',
+    'shippingLength': 'Chiều dài kiện hàng',
+    'shippingWidth': 'Chiều rộng kiện hàng',
+    'shippingHeight': 'Chiều cao kiện hàng',
   };
 }

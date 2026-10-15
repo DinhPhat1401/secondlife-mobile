@@ -45,10 +45,10 @@ class PostInitResponseModel {
 
     return PostInitResponseModel(
       postId: json['postId']?.toString() ?? '',
-      aiSessionId: json['aiSessionId']?.toString() ?? '',
-      initialMessage: json['initialMessage'] ?? '',
+      aiSessionId: (json['aiSessionId'] ?? json['sessionId'])?.toString() ?? '',
+      initialMessage: (json['initialMessage'] ?? json['aiInitialMessage'])?.toString() ?? '',
       suggestedQuestions: questions,
-      visualReport: json['visualReport'],
+      visualReport: (json['visualReport'] ?? json['aiDescription'])?.toString(),
     );
   }
 }
@@ -85,13 +85,14 @@ class AiPriceEstimationModel {
   });
 
   factory AiPriceEstimationModel.fromJson(Map<String, dynamic> json) {
+    final payload = (json['data'] is Map<String, dynamic>) ? json['data'] as Map<String, dynamic> : json;
     return AiPriceEstimationModel(
-      estimatedPrice: (json['estimatedPrice'] as num?)?.toDouble() ?? 0.0,
-      priceMin: (json['priceMin'] as num?)?.toDouble() ?? 0.0,
-      priceMax: (json['priceMax'] as num?)?.toDouble() ?? 0.0,
-      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
-      reasoning: json['reasoning'] ?? '',
-      currency: json['currency'] ?? 'VND',
+      estimatedPrice: (payload['estimatedPrice'] ?? payload['suggestedPrice'] as num?)?.toDouble() ?? 0.0,
+      priceMin: (payload['priceMin'] ?? payload['fairPriceMin'] as num?)?.toDouble() ?? 0.0,
+      priceMax: (payload['priceMax'] ?? payload['fairPriceMax'] as num?)?.toDouble() ?? 0.0,
+      confidence: (payload['confidence'] as num?)?.toDouble() ?? 0.0,
+      reasoning: (payload['reasoning'] ?? payload['expectedSellTime'] ?? '').toString(),
+      currency: payload['currency'] ?? 'VND',
     );
   }
 }

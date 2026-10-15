@@ -4,6 +4,7 @@ enum WalletTransactionType {
   commissionFee('COMMISSION_FEE', 'Phí hoa hồng dịch vụ', false),
   refund('REFUND', 'Hoàn tiền giao dịch', true),
   deposit('DEPOSIT', 'Nạp tiền vào ví', true),
+  payment('PAYMENT', 'Thanh toán dịch vụ', false),
   adjustment('ADJUSTMENT', 'Điều chỉnh hệ thống', true);
 
   final String code;
@@ -24,6 +25,8 @@ enum WalletTransactionType {
         return WalletTransactionType.refund;
       case 'DEPOSIT':
         return WalletTransactionType.deposit;
+      case 'PAYMENT':
+        return WalletTransactionType.payment;
       case 'ADJUSTMENT':
       default:
         return WalletTransactionType.adjustment;

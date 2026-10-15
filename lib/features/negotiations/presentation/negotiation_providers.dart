@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../auth/presentation/auth_providers.dart';
 import '../data/negotiation_repository.dart';
 import '../domain/negotiation_model.dart';
 
@@ -32,8 +33,12 @@ final sellerNegotiationsNotifierProvider =
 class SellerNegotiationsNotifier extends Notifier<NegotiationsState> {
   @override
   NegotiationsState build() {
-    Future.microtask(() => fetchNegotiations());
-    return const NegotiationsState(isLoading: true);
+    final userId = ref.watch(authNotifierProvider.select((s) => s.user?.id));
+    if (userId != null && userId.isNotEmpty) {
+      Future.microtask(() => fetchNegotiations());
+      return const NegotiationsState(isLoading: true);
+    }
+    return const NegotiationsState();
   }
 
   NegotiationRepository get _repository => ref.read(negotiationRepositoryProvider);
