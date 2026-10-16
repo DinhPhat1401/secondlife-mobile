@@ -1,8 +1,10 @@
 enum OrderStatus {
   pending('PENDING', 'Chờ xác nhận'),
+  pendingFinalPayment('PENDING_FINAL_PAYMENT', 'Chờ buyer thanh toán (6h)'),
   confirmed('CONFIRMED', 'Đã xác nhận'),
   shipping('SHIPPING', 'Đang vận chuyển'),
   delivered('DELIVERED', 'Đã giao thành công'),
+  expired('EXPIRED', 'Hết hạn thanh toán'),
   cancelled('CANCELLED', 'Đã hủy'),
   unknown('UNKNOWN', 'Không xác định');
 
@@ -15,6 +17,9 @@ enum OrderStatus {
     switch (val?.toUpperCase()) {
       case 'PENDING':
         return OrderStatus.pending;
+      case 'PENDING_FINAL_PAYMENT':
+      case 'AWAITING_PAYMENT':
+        return OrderStatus.pendingFinalPayment;
       case 'CONFIRMED':
         return OrderStatus.confirmed;
       case 'SHIPPING':
@@ -22,6 +27,8 @@ enum OrderStatus {
         return OrderStatus.shipping;
       case 'DELIVERED':
         return OrderStatus.delivered;
+      case 'EXPIRED':
+        return OrderStatus.expired;
       case 'CANCELLED':
       case 'CANCELED':
         return OrderStatus.cancelled;
@@ -137,4 +144,7 @@ class SellerOrderModel {
       updatedAt: json['updatedAt'],
     );
   }
+
+  bool get isPendingFinalPayment => status == OrderStatus.pendingFinalPayment;
+  bool get isExpiredOrForfeited => status == OrderStatus.expired || (status == OrderStatus.cancelled && hasInspection);
 }

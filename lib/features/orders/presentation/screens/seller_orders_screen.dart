@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:secondlife_app_seller/core/theme/app_colors.dart';
+import 'package:secondlife_app_seller/features/auth/presentation/auth_providers.dart';
+import 'package:secondlife_app_seller/features/shipments/data/shipment_repository.dart';
+import 'package:secondlife_app_seller/features/shipments/presentation/widgets/tamper_seal_lookup_sheet.dart';
 import 'package:secondlife_app_seller/shared/widgets/sl_badge.dart';
 import '../../domain/order_models.dart';
 import '../order_providers.dart';
@@ -21,9 +24,10 @@ class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> with Si
   final List<({String label, OrderStatus? status})> _tabs = [
     (label: 'Tất cả', status: null),
     (label: 'Chờ xử lý', status: OrderStatus.pending),
+    (label: 'Chờ Buyer (6h)', status: OrderStatus.pendingFinalPayment),
     (label: 'Đang giao', status: OrderStatus.shipping),
     (label: 'Hoàn tất', status: OrderStatus.delivered),
-    (label: 'Đã hủy', status: OrderStatus.cancelled),
+    (label: 'Đã hủy / Quá hạn', status: OrderStatus.cancelled),
   ];
 
   @override
@@ -272,12 +276,77 @@ class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> with Si
               ],
             ),
           ),
+          if (order.isPendingFinalPayment) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFDBA74)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.timer_outlined, size: 18, color: Color(0xFFC2410C)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Sản phẩm đã kiểm định ĐẠT! Người mua có tối đa 6 giờ để thanh toán nốt tiền hàng. Nếu quá hạn, đơn hàng sẽ hủy và tiền cọc kiểm định được giải ngân bồi thường vào Ví SecondLife của bạn.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF9A3412), fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          if (order.isExpiredOrForfeited) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDF4),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF86EFAC)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.monetization_on_outlined, size: 18, color: Color(0xFF16A34A)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Đơn hàng kiểm định đã hủy do Người mua quá hạn thanh toán 6 giờ. Tiền cọc kiểm định đã được giải ngân bồi thường vào Ví SecondLife của bạn.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF15803D), fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: 14),
 
           // Action Buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              if (order.hasInspection) ...[
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.qr_code, size: 16),
+                  label: const Text('Tem niêm phong', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    TamperSealLookupSheet.show(
+                      context,
+                      repository: ShipmentRepository(client: ref.read(apiClientProvider)),
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
               if (order.status == OrderStatus.pending) ...[
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(
@@ -341,12 +410,16 @@ class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> with Si
     switch (status) {
       case OrderStatus.pending:
         return SlBadge.warning('Chờ xác nhận');
+      case OrderStatus.pendingFinalPayment:
+        return SlBadge.warning('Chờ Buyer TT (6h)');
       case OrderStatus.confirmed:
         return SlBadge.info('Đã xác nhận');
       case OrderStatus.shipping:
         return SlBadge.info('Đang giao hàng');
       case OrderStatus.delivered:
         return SlBadge.success('Đã giao thành công');
+      case OrderStatus.expired:
+        return SlBadge.error('Quá hạn 6h');
       case OrderStatus.cancelled:
         return SlBadge.error('Đã hủy');
       default:

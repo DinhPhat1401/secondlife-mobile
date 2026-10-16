@@ -90,6 +90,14 @@ class AppException implements Exception {
         );
       }
 
+      if (statusCode == 429) {
+        return AppException(
+          message: 'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát (Giới hạn tối đa 30 yêu cầu/phút).',
+          statusCode: 429,
+          errorCode: 'RATE_LIMIT_EXCEEDED',
+        );
+      }
+
       return AppException(
         message: message ?? 'Có lỗi xảy ra (Mã lỗi $statusCode)',
         statusCode: statusCode,
