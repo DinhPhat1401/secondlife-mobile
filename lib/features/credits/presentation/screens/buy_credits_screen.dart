@@ -6,6 +6,7 @@ import 'package:secondlife_app_seller/core/theme/app_colors.dart';
 import 'package:secondlife_app_seller/features/credits/domain/credit_models.dart';
 import 'package:secondlife_app_seller/features/credits/presentation/credit_providers.dart';
 import 'package:secondlife_app_seller/features/wallet/presentation/wallet_providers.dart';
+import 'package:secondlife_app_seller/features/wallet/presentation/widgets/vietqr_deposit_sheet.dart';
 
 class BuyCreditsScreen extends ConsumerStatefulWidget {
   const BuyCreditsScreen({super.key});
@@ -115,15 +116,13 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen>
   }
 
   Future<void> _showQrDepositSheet(double shortageAmount) async {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _QrDepositModal(
-        shortageAmount: shortageAmount,
-        currencyFormat: _currencyFormat,
-      ),
-    );
+    await showSellerVietQrDepositSheet(context, ref, initialAmount: shortageAmount);
+    if (mounted) {
+      await Future.wait([
+        ref.read(sellerWalletNotifierProvider.notifier).loadWalletData(),
+        ref.read(creditNotifierProvider.notifier).loadInitialData(),
+      ]);
+    }
   }
 
   @override
@@ -525,183 +524,6 @@ class _BuyCreditsScreenState extends ConsumerState<BuyCreditsScreen>
           const CircularProgressIndicator(),
           const SizedBox(height: 12),
           Text(msg, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-        ],
-      ),
-    );
-  }
-}
-
-class _QrDepositModal extends ConsumerStatefulWidget {
-  final double shortageAmount;
-  final NumberFormat currencyFormat;
-
-  const _QrDepositModal({
-    required this.shortageAmount,
-    required this.currencyFormat,
-  });
-
-  @override
-  ConsumerState<_QrDepositModal> createState() => _QrDepositModalState();
-}
-
-class _QrDepositModalState extends ConsumerState<_QrDepositModal> {
-  bool _isLoading = true;
-  String? _error;
-  Map<String, dynamic>? _depositData;
-
-  @override
-  void initState() {
-    super.initState();
-    _requestDeposit();
-  }
-
-  Future<void> _requestDeposit() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final repo = ref.read(walletRepositoryProvider);
-      final res = await repo.createDepositRequest(widget.shortageAmount);
-      if (mounted) {
-        setState(() {
-          _depositData = res;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Nạp Tiền Nhanh Qua VietQR',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const Divider(),
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_error != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                children: [
-                  const Icon(Icons.error_outline, color: AppColors.error, size: 36),
-                  const SizedBox(height: 8),
-                  Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.error)),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _requestDeposit,
-                    child: const Text('Thử Lại'),
-                  ),
-                ],
-              ),
-            )
-          else if (_depositData != null) ...[
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  'https://img.vietqr.io/image/${_depositData!['bankName']}-${_depositData!['bankAccountNumber']}-compact2.png?amount=${_depositData!['amount']}&addInfo=${_depositData!['code']}&accountName=${Uri.encodeComponent(_depositData!['bankAccountName'] ?? '')}',
-                  width: 200,
-                  height: 200,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 200,
-                    height: 200,
-                    color: const Color(0xFFF3F4F6),
-                    child: const Icon(Icons.qr_code, size: 64, color: AppColors.textMuted),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                children: [
-                  _buildTransferInfoRow('Ngân hàng:', '${_depositData!['bankName']}'),
-                  _buildTransferInfoRow('Số tài khoản:', '${_depositData!['bankAccountNumber']}'),
-                  _buildTransferInfoRow('Chủ tài khoản:', '${_depositData!['bankAccountName']}'),
-                  _buildTransferInfoRow('Số tiền:', widget.currencyFormat.format(_depositData!['amount'])),
-                  _buildTransferInfoRow('Nội dung chuyển:', '${_depositData!['code']}', isHighlight: true),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () async {
-                Navigator.pop(context);
-                await Future.wait([
-                  ref.read(sellerWalletNotifierProvider.notifier).loadWalletData(),
-                  ref.read(creditNotifierProvider.notifier).loadInitialData(),
-                ]);
-              },
-              child: const Text(
-                'Tôi Đã Chuyển Khoản Xong',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTransferInfoRow(String label, String value, {bool isHighlight = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isHighlight ? FontWeight.w800 : FontWeight.w600,
-              color: isHighlight ? AppColors.primary : AppColors.textPrimary,
-            ),
-          ),
         ],
       ),
     );

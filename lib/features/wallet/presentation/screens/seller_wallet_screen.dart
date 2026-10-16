@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/wallet_models.dart';
 import '../wallet_providers.dart';
+import '../widgets/vietqr_deposit_sheet.dart';
 import '../widgets/withdrawal_request_sheet.dart';
 
 class SellerWalletScreen extends ConsumerStatefulWidget {
@@ -194,36 +195,58 @@ class _SellerWalletScreenState extends ConsumerState<SellerWalletScreen>
                         ],
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: 0,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppColors.primary,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                elevation: 0,
+                              ),
+                              icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                              label: const Text(
+                                'Nạp Tiền VietQR',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                              ),
+                              onPressed: () {
+                                showSellerVietQrDepositSheet(context, ref);
+                              },
+                            ),
                           ),
-                          icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
-                          label: const Text(
-                            'Yêu Cầu Rút Tiền Về Ngân Hàng',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white, width: 1.5),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                              label: const Text(
+                                'Rút Tiền Về NH',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                              ),
+                              onPressed: () async {
+                                final success = await WithdrawalRequestSheet.show(
+                                  context,
+                                  wallet?.balance ?? 0.0,
+                                );
+                                if (success == true && mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Yêu cầu rút tiền đã được gửi! Đang chờ duyệt.'),
+                                      backgroundColor: AppColors.success,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
                           ),
-                          onPressed: () async {
-                            final success = await WithdrawalRequestSheet.show(
-                              context,
-                              wallet?.balance ?? 0.0,
-                            );
-                            if (success == true && mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Yêu cầu rút tiền đã được gửi! Đang chờ duyệt.'),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
-                            }
-                          },
-                        ),
+                        ],
                       ),
                     ],
                   ),
