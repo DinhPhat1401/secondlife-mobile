@@ -1,7 +1,7 @@
 import 'dart:io';
 
 class AppConfig {
-  static const String appName = 'SecondLife Seller';
+  static const String appName = 'SecondLife Partner';
 
   static String? _customBaseUrl;
   static set customBaseUrl(String? url) => _customBaseUrl = url;
